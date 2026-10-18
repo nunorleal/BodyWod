@@ -24,3 +24,5 @@
 @media(max-height:780px){.active-session .movement-illustration{max-height:142px}.active-session .demo-image{min-height:90px}.active-session .demo-heading{font-size:8px}}
 .rep-counter{text-align:center;margin:14px 0 4px;font-variant-numeric:tabular-nums}.rep-counter strong{font-size:76px;line-height:1;font-weight:800;letter-spacing:-3px;color:#62e5b6}.rep-counter span{font-size:27px;color:#91a9b7}.rep-counter b{font-weight:650}.rep-counter small{display:block;font-size:10px;letter-spacing:2px;color:#bfd0da;margin-top:8px}
 .active-session.has-reps .timer{font-size:29px;letter-spacing:-1px;color:#b3c6d1;margin:11px 0 5px}.active-session.has-reps .rep-label{font-size:10px}.active-session.has-reps .movement-illustration{max-height:142px}.active-session.has-reps .exercise-demo{margin-bottom:6px}
+
+.app-version{text-align:center;font-size:10px;line-height:1.5;color:var(--muted,#91a9b7);margin:24px 0 4px;letter-spacing:.4px}
