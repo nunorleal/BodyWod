@@ -164,3 +164,9 @@ Validação: 72 testes, incluindo todos os perfis avançados elegíveis, bips e 
 ### Pronúncia — versão 1.03
 
 A camada de voz envia `Fléxões` ao sintetizador para pedir o é aberto solicitado pelo utilizador. A transformação abrange nomes, avisos de próximos exercícios e o teste de som. A escrita dos exercícios, dados guardados e textos apresentados continua `Flexões`; apenas o texto da fala recebe a adaptação. A realização sonora depende da voz pt-PT instalada e pode ser ouvida através de «Testar som: bips e voz». Validado o texto enviado à API de voz e a preservação dos textos de apresentação.
+
+### Abertura direta no Safari do Mac — versão 1.04
+
+O `index.html` anterior era a entrada modular de desenvolvimento. Ao abri-lo diretamente como ficheiro local, o Safari não carregava os módulos JavaScript e a página ficava vazia. A compilação gera agora **dois ficheiros autónomos idênticos**, `index.html` e `BodyWOD.html`, ambos com CSS e JavaScript incorporados. Qualquer um pode ser aberto como ficheiro ou servido por HTTP/HTTPS, sem alterar as permissões do navegador. O modelo modular foi movido para `src/shell.html`, usado apenas como entrada da compilação. Editar o modelo e os módulos, depois executar o build; não editar os dois HTML gerados manualmente.
+
+O formato de armazenamento e os registos guardados não foram alterados. Abrir por ficheiro e abrir por HTTP/HTTPS pode usar espaços de armazenamento diferentes do navegador; a aplicação não transfere automaticamente dados entre esses contextos.
