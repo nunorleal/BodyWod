@@ -126,3 +126,41 @@ Os restantes blocos mantêm alternância muscular, variantes exigentes e trabalh
 A biblioteca inclui mountain climbers normais, lentos e cruzados, também pesquisáveis por «Escaladores em prancha». Já existiam crunches, bicycle crunches, tesouras deitado, tuck-ups e Russian twists com os pés apoiados. Foram acrescentadas quatro variantes distintas: tesouras verticais com apoio nos antebraços, encolhimentos de joelhos sentado com apoio das mãos, Russian twists com pés elevados sem carga e elevações de joelhos com apoio nos antebraços. Cada uma tem instruções, convenção de contagem, alternativas, mapa muscular e posições SVG próprias. Bicycle crunches também recebeu ilustração específica.
 
 A identificação das fotografias é descritiva e, no caso inferior direito, apenas provável: uma fotografia não confirma a sequência de execução ou se «3×30» significa segundos ou repetições. Não foram importadas promessas de transformação corporal, cargas ou quantidades do anúncio. A variante Russian twist mantém-se sem carga, de acordo com a regra de treino sem equipamento. Referências descritivas consultadas: [biblioteca de exercícios da Universidade de Keele](https://www.keele.ac.uk/study/campuslife/sportatkeele/activekeele/exerciselibrary/) e [Russian twist — NASM](https://www.nasm.org/resource-center/exercise-library/russian-twist). Continua pendente a revisão técnica profissional das ilustrações e da programação.
+
+### Correção de gravação em Safari / iPhone (v1.7.1)
+
+O armazenamento mantém a chave `bodywod.v1`, com um formato interno compacto que partilha subárvores JSON iguais (exercícios, etapas e planos). A leitura aceita os dados antigos; a primeira gravação bem-sucedida converte-os sem eliminar registos. Na leitura, cada referência é reconstruída independentemente para preservar as cópias históricas. Os backups exportados continuam em JSON completo, versão 1, compatíveis com a importação existente. Depois de migrar, usar esta versão ou posterior: versões antigas não compreendem o formato interno compacto.
+
+Num cenário de teste com um treino avançado de 60 minutos repetido em dez registos, plano guardado e sessão, a estimativa UTF-16 passou de 3108 KB para 87 KB (97% de redução). Esta medida não determina a quota efetiva de um dispositivo nem confirma a causa do erro observado no iPhone. O Safari pode recusar operações por quota ou permissões; a aplicação distingue essas exceções e apresenta o nome do erro nas definições.
+
+Se uma escrita falhar, o estado mais recente permanece em memória, disponível na exportação, sem declarar a gravação concluída. O último conteúdo persistido não é apagado. Um aviso permanente oferece exportação e nova tentativa; as tentativas automáticas após falha têm intervalo de 30 segundos. Fechar/recarregar pode perder alterações apenas em memória. Se a leitura inicial falhar, a aplicação impede escritas para não substituir dados antigos que não conseguiu ler.
+
+Validação: 61 testes, incluindo quota simulada, permissões bloqueadas, getter de localStorage que lança exceção, migração, preservação das versões históricas, repetição/exportação/recuperação, e gravação compacta numa quota que rejeita os dados antigos. Interface verificada no navegador local com viewport 390 × 844; não foi efetuado teste num iPhone físico. O ficheiro autónomo `BodyWOD.html` foi reconstruído. A cópia publicada em GitHub Pages precisa de receber esse ficheiro atualizado.
+
+### Avançado com maior densidade (v1.8.0)
+
+Mantêm-se os três níveis e as regras dos níveis iniciante e intermédio. O avançado aumenta as metas de repetições e usa 10 segundos de recuperação entre exercícios. No EMOM avançado são 55 segundos de execução e 5 de recuperação; o AMRAP mantém execução livre e contagens confirmadas pelo utilizador.
+
+Nas flexões dinâmicas do avançado, a cadência é 1 repetição a cada 1,5 segundos, com uma pausa de 10 segundos após cada grupo de 15. O gerador reserva janelas de 120 segundos quando o bloco tem espaço; em blocos mais curtos adapta a janela sem ultrapassar a duração pedida. As janelas incluem 6 segundos de preparação, os bips de execução e as pausas: uma janela de 120 segundos permite 56 repetições, com o último bip aos 118,5 segundos. O contador fica parado nas pausas, o cronómetro mostra a recuperação e a voz anuncia a pausa e o regresso. Flexões lentas, excêntricas e com pausa mantêm cadência própria; isometrias não recebem contagem dinâmica.
+
+Exemplo Full Body avançado, 60 minutos com 5 de retorno à calma: bloco A de 15 minutos, duas voltas de 21 burpees / 70s, 42 lunges / 70s, 56 flexões / 120s, 42 agachamentos / 70s e 32 sit-ups / 70s, com 10s entre exercícios. As pausas internas das flexões estão incluídas nos 120s. A contagem é um ritmo proposto, não repetições detetadas nem uma avaliação individual. O ecrã recomenda manter amplitude e técnica e abrandar ou pausar quando necessário.
+
+Os planos novos recebem as janelas maiores. Ao recuperar uma sessão antiga, apenas as metas de etapas futuras podem ser atualizadas: etapas já iniciadas e tempos guardados não são reprogramados. Para obter a distribuição nova de dois minutos, gerar um novo treino avançado. Backups e histórico mantêm os protocolos no plano; a recuperação dentro de uma pausa permanece em pausa.
+
+### Versão visível da aplicação
+
+O rodapé de todos os ecrãs mostra `Versão 1.01` em pequeno. A fonte única é `src/version.js`, independente da versão do formato de dados. Em cada nova alteração entregue, executar `npm run release` uma vez: incrementa 1.01 → 1.02 → 1.03 e reconstrói o HTML. Para repetir a compilação da mesma alteração, usar `npm run build`, que não incrementa. O build sincroniza a versão da cache offline e inclui a versão no HTML autónomo.
+
+### Avançado em todos os exercícios — versão 1.02
+
+Esta revisão substitui a prioridade especial das flexões por uma distribuição comum a todos os movimentos principais. O gerador usa menos voltas e janelas maiores (até 120s), mantendo o tempo total escolhido. Num Full Body de 60 minutos, as janelas dos blocos principais ficam aproximadamente entre 110 e 120s, incluindo o cardio por tempo e as isometrias. Em sessões curtas, as janelas adaptam-se ao tempo disponível; não são acrescentados minutos ao treino.
+
+Todos os exercícios principais por repetições têm agora perfil explícito de cadência e pausa por grupos: normalmente 1,5s por repetição, 2s em movimentos mais complexos e da cadeia posterior, 3s em burpees/inchworm, e 3,5s nas variantes explicitamente lentas, excêntricas ou com pausa. Os grupos têm 15 repetições (10 nos burpees/inchworm), seguidos de 10s de recuperação interna. O mesmo perfil controla metas, bips, voz e contador, com os valores reais apresentados na pré-visualização e durante a execução. As flexões deixam de receber uma reserva exclusiva de 120s em detrimento dos outros exercícios.
+
+Isometrias e cardio por tempo permanecem sem contagem inventada de repetições: recebem janelas maiores e recuperação entre exercícios de 10s. EMOM conserva 55s/5s e os perfis de repetições dentro do minuto. AMRAP mantém ritmo livre: dois grupos de repetições por movimento e referências de 60s para execução por tempo, sem contagem automática de voltas. Aquecimento, retorno à calma, iniciante e intermédio conservam as regras anteriores.
+
+Validação: 72 testes, incluindo todos os perfis avançados elegíveis, bips e pausas em cada perfil, cobertura das seis categorias musculares, isometrias/cardio, tempos exatos, modalidades, edição e recuperação. O novo gerador exige criar um novo treino; sessões já iniciadas não são redistribuídas.
+
+### Pronúncia — versão 1.03
+
+A camada de voz envia `Fléxões` ao sintetizador para pedir o é aberto solicitado pelo utilizador. A transformação abrange nomes, avisos de próximos exercícios e o teste de som. A escrita dos exercícios, dados guardados e textos apresentados continua `Flexões`; apenas o texto da fala recebe a adaptação. A realização sonora depende da voz pt-PT instalada e pode ser ouvida através de «Testar som: bips e voz». Validado o texto enviado à API de voz e a preservação dos textos de apresentação.

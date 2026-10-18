@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "start": "node scripts/serve.mjs",
-    "build": "node scripts/bundle.mjs"
+    "build": "node scripts/bundle.mjs",
+    "release": "node scripts/bump-version.mjs"
   },
   "engines": {
     "node": ">=20"

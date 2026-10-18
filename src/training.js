@@ -22,11 +22,29 @@ export const advancedWodSequence=[
  {category:'Abdominais e core',focus:['Sit-ups','Tuck-ups','V-ups','Bicycle crunches','Crunch com pernas verticais']}
 ];
 export function advancedRepProfile(exercise){
+ if(exercise.execution!=='reps')return null;
  const n=exercise.name;
- if(/^Burpees/.test(n))return {cadence:4,cap:20};
- if(exercise.pattern==='passada')return {cadence:2,cap:40};
- if(exercise.category==='Peito e tríceps')return {cadence:exercise.difficulty===3?3:2.5,cap:30};
- if(exercise.pattern==='agachar')return {cadence:exercise.impact==='high'?2.5:2,cap:40};
- if(['Sit-ups','Tuck-ups','V-ups'].includes(n))return {cadence:3,cap:20};
+ let cadence=1.5,every=15;
+ if(/pausa|excêntric|lent[ao]|descida lenta/i.test(n))cadence=3.5;
+ else if(/^Burpees|Inchworm/i.test(n)){cadence=3;every=10}
+ else if(exercise.category==='Costas e cadeia posterior')cadence=2;
+ else if(['Tuck-ups','V-ups'].includes(n))cadence=2;
+ else if(exercise.impact==='high'||exercise.difficulty===3)cadence=2;
+ // Classic pushups retain the requested 1.5 s rhythm; technical variants take longer.
+ if(exercise.category==='Peito e tríceps'&&!/pausa|excêntric|lent[ao]/i.test(n))cadence=1.5;
+ return {cadence,cap:90,cluster:{every,rest:10}};
+}
+// A cluster window includes preparation, repetitions and its short recoveries.
+export function clusterRepTime(index,{cadence=1.5,cluster},start=6){return start+index*cadence+Math.floor(index/cluster.every)*cluster.rest}
+export function clusterTarget(duration,profile){
+ let count=0;while(count<profile.cap&&clusterRepTime(count,profile)<=duration-1.5)count++;
+ return count;
+}
+export function clusterPause(step,elapsed){
+ if(!step.cluster||!step.reps||step.kind!=='work')return null;
+ for(let n=step.cluster.every;n<step.reps;n+=step.cluster.every){
+  const start=clusterRepTime(n-1,step)+step.cadence,end=clusterRepTime(n,step);
+  if(elapsed>=start&&elapsed<end)return {group:n/step.cluster.every,remaining:end-elapsed};
+ }
  return null;
 }
