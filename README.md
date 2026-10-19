@@ -170,3 +170,110 @@ A camada de voz envia `Fléxões` ao sintetizador para pedir o é aberto solicit
 O `index.html` anterior era a entrada modular de desenvolvimento. Ao abri-lo diretamente como ficheiro local, o Safari não carregava os módulos JavaScript e a página ficava vazia. A compilação gera agora **dois ficheiros autónomos idênticos**, `index.html` e `BodyWOD.html`, ambos com CSS e JavaScript incorporados. Qualquer um pode ser aberto como ficheiro ou servido por HTTP/HTTPS, sem alterar as permissões do navegador. O modelo modular foi movido para `src/shell.html`, usado apenas como entrada da compilação. Editar o modelo e os módulos, depois executar o build; não editar os dois HTML gerados manualmente.
 
 O formato de armazenamento e os registos guardados não foram alterados. Abrir por ficheiro e abrir por HTTP/HTTPS pode usar espaços de armazenamento diferentes do navegador; a aplicação não transfere automaticamente dados entre esses contextos.
+
+### Aba Contador — versão 1.05
+
+O FitTempo fornecido pelo utilizador foi integrado na aba «Contador», com os modos Automático e Séries por toque, ritmo/BPM/cadência, voz pt-PT, bips, cronómetro e histórico próprios. A cópia original está preservada em `src/counter/source.html`; o ficheiro da outra aplicação não foi alterado. A compilação prepara a cópia integrada com estilos e ícones locais, sem Tailwind/Lucide/fontes carregados da internet, e incorpora-a nos dois HTML autónomos. Não é necessário copiar a pasta da outra app para usar ou publicar o BodyWOD.
+
+O contador mantém-se carregado ao navegar entre abas. Ao sair da aba ou colocar a página em segundo plano, os temporizadores e o som ficam em pausa; ao regressar, a contagem e os valores permanecem, sem retoma automática. Recarregar ou fechar a página reinicia a sessão corrente do contador, como na app original. O histórico concluído conserva a chave `fittempo_history`, separado de `bodywod.v1`, e consulta-se pelo ícone de histórico dentro do contador. O backup BodyWOD existente cobre os dados do treino funcional; o histórico do contador permanece separado. Dados de outro endereço/navegador não são transferidos automaticamente. Se a gravação do contador for bloqueada, os resultados permanecem em memória e o contador apresenta um aviso.
+
+Os estilos e a lógica do FitTempo ficam num documento incorporado para não interferirem com o treino funcional. `scripts/counter-assets.mjs` prepara os recursos locais; `src/counter.js` gere a aba e a pausa na navegação. O modelo `src/shell.html` conserva o painel enquanto a navegação principal muda de ecrã.
+
+Validação da integração: 79 testes passaram; no navegador foram verificados o arranque automático, a pausa ao mudar de aba, a preservação das séries por toque e o ecrã com 390 × 844. O histórico já existente do treino funcional permaneceu disponível.
+
+### Escolha inicial — versão 1.06
+
+Cada abertura apresenta um ecrã inicial com dois botões grandes: **Crossfit**, que abre a área existente de treino funcional, e **FitTempo**, que abre diretamente o contador. A escolha não é memorizada, para voltar a perguntar em cada abertura. O ecrã de escolha não mostra a navegação de exercícios/histórico. A área FitTempo também não apresenta esses menus do treino funcional; o botão «Escolher app» no cabeçalho permite regressar à escolha, pausando o contador sem apagar a contagem. A área Crossfit conserva os seus cinco separadores e o mesmo botão para escolher outra app. Dados e sessões guardadas mantêm-se.
+
+### Título — versão 1.07
+
+O título apresenta BODYWOD como uma palavra única em todos os cabeçalhos. BODY mantém a cor clara e WOD a cor verde.
+
+### Paletas por aplicação — versão 1.08
+
+A área Crossfit usa fundos, painéis, controlos e destaques em verdes. A área FitTempo usa azuis, tanto no cabeçalho e definições do BodyWOD como no contador incorporado: anéis, números, botões, seletores, fases, séries por toque e histórico. A compilação aplica a paleta azul à cópia integrada do contador, incluindo as cores usadas em alterações de estado, sem modificar a app original. Avisos/ações destrutivas e as cores informativas dos mapas musculares conservam o seu significado. O ecrã inicial conserva o botão Crossfit verde e FitTempo azul.
+
+### Assinatura — versão 1.09
+
+Os cabeçalhos apresentam «Nuno Leal» em pequeno por baixo de BODYWOD, no ecrã inicial e nas duas áreas da app.
+
+### Botão de início — versão 1.10
+
+O acesso à escolha Crossfit/FitTempo passa a ser um botão com ícone de casa no topo direito, junto às definições. Substitui o botão de texto «← Escolher app». O logótipo e a assinatura mantêm-se à esquerda.
+
+### FitTempo sem barra duplicada — versão 1.11
+
+A barra interna com o logótipo FitTempo e os botões de voz/som/histórico deixa de aparecer. O botão de configurações no cabeçalho BodyWOD passa a abrir as definições reais do FitTempo quando se está nessa área: Voz guia, Som do metrónomo e Histórico do FitTempo. As opções refletem e alteram diretamente o contador incorporado, sem interferir com as preferências do Crossfit. O cabeçalho original permanece oculto no documento incorporado para preservar os controlos internos e as respetivas funções; a app original não é modificada.
+
+Validação da versão 1.11: 80 testes passaram; verificados no navegador a ausência da barra, a alteração real e leitura posterior de voz/som pelas definições do topo e a abertura/fecho do histórico do contador.
+
+### Enchimento das séries automáticas — versão 1.12
+
+No FitTempo, em «Séries por toque → Automático», o quadrado começa a encher de azul após medir a duração da primeira série. O enchimento usa o mesmo relógio e o mesmo instante da próxima série que a contagem: chega ao fim do ciclo e recomeça na série seguinte. Mostra também a percentagem e um indicador de progresso acessível. Ao pausar ou mudar de área, fica parado no mesmo ponto; ao retomar continua, e ao repor/recalibrar é limpo. A contagem manual por toque não apresenta enchimento de tempo, pois não tem uma duração conhecida.
+
+Validação da versão 1.12: 83 testes passaram, incluindo ciclo de 3 segundos, pausa, reinício e reposição do enchimento. No navegador, verificada a medição de uma série, o avanço automático para a seguinte e a pausa do enchimento a 84%.
+
+### Meta de séries e perímetro — versão 1.13
+
+Em «FitTempo → Séries por toque», é possível escolher «Livre» ou indicar o número de séries. A opção aplica-se tanto à contagem manual como à automática. Com meta, uma linha percorre o perímetro do quadrado à medida que as séries ficam concluídas, acompanhada pela indicação «concluídas / meta». O interior continua a mostrar apenas o tempo da série automática, após calibração. Ao atingir a meta, o cronómetro e a contagem param; os indicadores ficam completos. «Desfazer» permite retomar e «Repor» limpa a sessão conservando a meta escolhida. A meta pode ser alterada durante uma pausa sem perder o enchimento atual. O modo livre não tem perímetro nem limite de séries.
+
+O código da contagem integrada passa a estar em `src/counter/manual.js`; o original fornecido permanece intacto. Validação: 90 testes passaram, incluindo limite em callbacks atrasados, instante final exato, pausa, desfazer, retoma, reposição e edição da meta. Verificada também a apresentação no navegador em largura de telemóvel.
+
+### Contagem ampliada — versão 1.14
+
+O número dentro do quadrado das séries por toque passa a ocupar quase toda a área disponível. O tamanho adapta-se à largura, altura e quantidade de algarismos; «Séries» e a percentagem ficam discretos junto à base. O ícone «+» deixa de ocupar espaço e a contagem mantém o contraste durante a pausa. Os enchimentos de tempo e perímetro continuam visíveis. Compilação validada e 90 testes passaram.
+
+### Perímetro contínuo e duração prevista — versão 1.15
+
+Em séries por toque automáticas com meta e duração calibrada, o perímetro soma as séries concluídas à fração decorrida da série atual. Avança continuamente com o mesmo relógio do enchimento interior, sem saltar na passagem de série; pausa e conclusão mantêm ambos sincronizados. Na contagem manual, o perímetro continua a representar as séries efetivamente registadas.
+
+Um painel «Duração prevista» mostra o número de séries multiplicado pela duração calibrada, incluindo a primeira série. Apresenta também o tempo restante, que exclui as pausas. Antes da calibração, indica que é necessário medir a primeira série; em modo livre não apresenta uma previsão total. Exemplo validado: 100 séries de 4 segundos = 06:40. A previsão atualiza-se ao alterar a meta e é limpa ao repor/recalibrar.
+
+Validação: 93 testes passaram, incluindo continuidade entre séries, previsão e tempo restante, pausa, alteração de meta e reposição. Confirmado no navegador o painel de duração e o perímetro numa fração da série.
+
+### Metas no Automático — versão 1.16
+
+O separador principal «Automático» permite definir a meta por repetições ou por séries, mantendo o campo de repetições por série. Na opção séries, 100 séries de 10 repetições configuram 1000 repetições e exatamente 100 séries no motor existente. Alterar as repetições por série conserva o número de séries escolhido. As predefinições regressam à sua meta original por repetições; os campos ficam bloqueados durante o treino.
+
+Em «Séries por toque → Automático», as metas deixam de ficar bloqueadas ao iniciar a medição da primeira série. Podem ser escolhidas e alteradas durante a preparação sem parar a medição. Depois da calibração, podem ser alteradas ao pausar, conservando o progresso.
+
+Validação: 96 testes passaram; confirmados no navegador o acesso às metas durante a preparação automática e a configuração de 100 séries no separador principal.
+
+### Celebração de conclusão — versão 1.17
+
+Ao concluir uma meta no FitTempo (treino automático ou séries por toque), abre-se um popup com taça dourada, confettis e a mensagem «Parabéns!». Mostra o resultado e um botão «Continuar». A conclusão reproduz uma curta melodia e a voz «Parabéns! Treino concluído.», respeitando as opções de som e voz. A última contagem não substitui a mensagem de parabéns. A celebração não se repete ao renderizar ou pausar uma meta já concluída. Desfazer e completar novamente permite celebrar de novo.
+
+O popup usa um diálogo modal nativo com foco no botão de fecho; pode fechar-se também com Escape. Os confettis respeitam a preferência de movimento reduzido. O fecho e a saída da área cancelam os sons pendentes. O histórico do modo automático mantém o comportamento anterior.
+
+Validação: 99 testes passaram, incluindo abertura única, voz de parabéns, melodia, fecho, limpeza dos efeitos, conclusão nos dois modos e preservação do histórico. Popup e botão «Continuar» verificados no navegador.
+
+### Início explícito da medição — versão 1.18
+
+Escolher «Séries por toque → Automático» prepara o modo e deixa o cronómetro parado. A medição da primeira série começa apenas no botão «Iniciar». Antes disso, o quadrado não regista séries e as metas continuam disponíveis. Ao iniciar, a mensagem pede para tocar no quadrado quando a primeira série terminar; a duração medida passa a controlar as séries seguintes. Mudar de modo ou repor também deixa a medição parada.
+
+Validação: 100 testes passaram, incluindo tempo decorrido antes de Iniciar sem alterar o cronómetro, meta configurável sem arranque, calibração após início explícito e ausência de reinício ao mudar de modo. Fluxo confirmado no navegador.
+
+### Controlos das séries automáticas — versão 1.19
+
+O botão «Desfazer última série» deixa de aparecer e de atuar no modo Automático das séries por toque. A linha de ações mostra apenas Iniciar/Pausar/Retomar e Repor. O botão Desfazer continua disponível no modo Manual para corrigir toques. Validados os testes das séries e dos dois ficheiros HTML (15 testes) e a ausência do botão no navegador.
+
+### Cópia completa em JSON — versão 1.20
+
+As definições do Crossfit e do FitTempo incluem «Cópia de segurança · toda a app», com os botões **Exportar JSON** e **Importar JSON**. O ficheiro `bodywod-completo-AAAA-MM-DD.json` reúne:
+
+- Crossfit: histórico (de onde é calculado o número de treinos efetuados), favoritos, exclusões, planos guardados, notas e avaliações, definições de áudio, último plano, configuração do gerador, sessão em pausa e resumo por guardar.
+- FitTempo: histórico disponível, definições de som/voz, configuração de repetições, séries, ritmo, preparação, pausas e cadência, contagem e duração medida das séries por toque e progresso do treino automático. Os temporizadores e o bloqueio do ecrã não são serializados; a recuperação fica em pausa.
+
+O formato inclui `format: bodywod.backup`, `backupVersion: 2`, versão da app e data de exportação. A importação continua a aceitar os antigos ficheiros JSON do Crossfit. O ficheiro é validado antes de alterar dados; os registos são reunidos por identificador (ou pelo conteúdo nos registos antigos do FitTempo), sem duplicar importações repetidas. As definições do ficheiro são recuperadas. Planos/registos e sessão já presentes no dispositivo são preservados; uma sessão do ficheiro é recuperada quando não existe outra. O limite de leitura é 100 MB. Não há envio para um servidor.
+
+O FitTempo passa a sincronizar os seus dados com a gravação principal da app. As séries por toque com meta concluída também passam a criar um registo no histórico. Repetir a conclusão após desfazer atualiza o mesmo registo. O limite antigo de 20 registos foi removido para os treinos futuros; registos anteriormente descartados não podem ser reconstruídos. Falhas de gravação mantêm os dados em memória e disponíveis para exportação. A importação escapa os textos mostrados no histórico do FitTempo.
+
+Validação: testes de exportação/importação completa, compatibilidade com JSON antigo, importação repetida, preservação da sessão existente, ficheiros inválidos, memória em caso de quota, sincronização autenticada entre a app e o contador e recuperação sem arranque de temporizadores. Exportação completa gerada e controlos verificados no navegador.
+
+### Definições FitTempo simplificadas — versão 1.21
+
+Retirado o botão «Histórico do FitTempo» e o título «Os teus registos» das definições. Os registos continuam guardados e incluídos na exportação/importação JSON. Validados 7 testes de integração e dos ficheiros HTML, e confirmada a ausência do botão no navegador.
+
+### Botões de dados — versão 1.22
+
+Os botões de cópia de segurança passam a chamar-se «Exportar dados» e «Importar dados», ambos com ícones de transferência correspondentes. A alteração aplica-se às definições das duas áreas, através do componente partilhado. Compilação concluída e apresentação confirmada no navegador.
