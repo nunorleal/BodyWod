@@ -1,4 +1,4 @@
-import {trainingRole,suitableForMain,advancedWodSequence,advancedRepProfile,clusterTarget} from './training.js';
+import {trainingRole,suitableForMain,advancedWodSequence,advancedRepProfile,clusterTarget,executionCadence} from './training.js';
 import {exercises, categories, byId} from './exercises.js';
 export const modalities=['Full Body','Força e resistência','HIIT','EMOM','AMRAP','Circuito funcional','Cardio e core','Treino misto'];
 export const levels=['Iniciante','Intermédio','Avançado'];
@@ -8,7 +8,7 @@ export function rng(seed){let n=seed>>>0;return()=>{n=(1664525*n+1013904223)>>>0
 export function repetitionTarget(exercise,work,level=1){
  if(exercise.execution!=='reps')return {reps:null,cadence:null,cluster:null};
  const profile=level===3?advancedRepProfile(exercise):null;
- const cadence=profile?.cadence||(/^Burpees/.test(exercise.name)?4:([0,2.5,2.25,1.5][level]||2.5)+(exercise.difficulty===3?.75:0));
+ const cadence=profile?.cadence||executionCadence(exercise,level);
  return {reps:profile?.cluster?clusterTarget(work,profile):Math.max(1,Math.min(profile?.cap||(level===3?90:60),Math.floor((work-6)/cadence))),cadence,cluster:profile?.cluster||null};
 }
 export function alternatives(exercise,config={},excluded=[]){return exercises.filter(e=>e.id!==exercise.id&&e.category===exercise.category&&e.primary.some(m=>exercise.primary.includes(m))&&e.difficulty<=(config.level||2)&&Math.abs(e.difficulty-exercise.difficulty)<=1&&(!config.lowImpact||e.impact==='low')&&!excluded.includes(e.id)&&(['warmup','cooldown'].includes(config.phase)||suitableForMain(e,config.level||2)))}
@@ -108,12 +108,12 @@ export function generate(config={},state={},seed=Date.now()){
 export function editItem(plan,blockId,itemId,patch){const copy=structuredClone(plan),b=copy.blocks.find(b=>b.id===blockId),i=b?.items.find(i=>i.id===itemId);if(!i)throw Error('Exercício não encontrado.');
  if(patch.exercise&&patch.exercise.id!==i.exercise.id){const allowed=alternatives(i.exercise,{...copy.config,phase:b.type},copy.config.excluded||[]);if(!allowed.some(e=>e.id===patch.exercise.id))throw Error('Substituição incompatível.');}
  const explicitReps=Object.hasOwn(patch,'reps')&&patch.reps!==i.reps;Object.assign(i,patch);if(explicitReps){i.repsMode='manual';const profile=repetitionTarget(i.exercise,i.work,copy.config.level);i.cluster=profile.cluster;i.cadence=profile.cadence;}else if(i.repsMode==='auto'&&b.format!=='amrap')Object.assign(i,repetitionTarget(i.exercise,i.work,copy.config.level));if(i.exercise.execution==='isometry')i.reps=null;if(!Number.isInteger(i.sets)||i.sets<1||i.sets>8||!Number.isInteger(i.work)||i.work<15||i.work>(copy.config.level===3?120:90)||!Number.isInteger(i.rest)||i.rest<0||i.rest>60||i.reps!==null&&(!Number.isInteger(i.reps)||i.reps<1||i.reps>(copy.config.level===3?90:60)))throw Error(`Usa 1–8 séries, 15–${copy.config.level===3?120:90}s de execução, 0–60s de descanso e 1–${copy.config.level===3?90:60} repetições.`);
- if(i.reps&&b.format!=='amrap'&&i.reps>(copy.config.level===3?repetitionTarget(i.exercise,i.work,3).reps:Math.floor((i.work-6)/2)))throw Error('Estas repetições não cabem no tempo com a cadência e as pausas previstas. Aumenta o tempo ou reduz as repetições.');
+ if(i.reps&&b.format!=='amrap'&&i.reps>repetitionTarget(i.exercise,i.work,copy.config.level).reps)throw Error('Estas repetições não cabem no tempo com a cadência e as pausas previstas. Aumenta o tempo ou reduz as repetições.');
  if(b.format==='emom'){if(i.work>55)throw Error('EMOM: no máximo 55s de execução.');i.rest=60-i.work;b.tail=b.target-b.items.reduce((s,x)=>s+x.sets*60,0);if(b.tail<0)throw Error('As séries excedem o bloco EMOM.');}
  else if(b.format!=='amrap'){
  const locked=i.locked;i.locked=true;distribute(b);i.locked=locked;
  }
- for(const item of b.items)if(item.id!==i.id&&item.reps&&b.format!=='amrap'){if(item.repsMode==='auto')Object.assign(item,repetitionTarget(item.exercise,item.work,copy.config.level));else item.reps=Math.max(1,Math.min(item.reps,copy.config.level===3?repetitionTarget(item.exercise,item.work,3).reps:Math.floor((item.work-6)/2)));}
+ for(const item of b.items)if(item.id!==i.id&&item.reps&&b.format!=='amrap'){if(item.repsMode==='auto')Object.assign(item,repetitionTarget(item.exercise,item.work,copy.config.level));else item.reps=Math.max(1,Math.min(item.reps,repetitionTarget(item.exercise,item.work,copy.config.level).reps));}
  return rebuild(copy);
 }
 export function regenerateBlock(plan,blockId,state,seed=Date.now()){
@@ -147,11 +147,12 @@ export function updateRepetitionTargets(plan,{from=0}={}){
  if(!plan)return plan;
  const copy=structuredClone(plan);
  for(const b of copy.blocks)if(b.type==='main'&&b.format!=='amrap')for(const item of b.items){
-  if(item.exercise.execution!=='reps'||item.repsMode==='manual')continue;
+  if(item.exercise.execution!=='reps')continue;
   const pending=copy.timeline.filter(s=>s.itemId===item.id&&s.kind==='work'&&s.start>=from);
   if(!pending.length)continue;
-  Object.assign(item,repetitionTarget(item.exercise,item.work,copy.config.level),{repsMode:'auto'});
-  for(const step of pending)Object.assign(step,repetitionTarget(step.exercise,step.duration,copy.config.level));
+  const manual=item.repsMode==='manual',target=repetitionTarget(item.exercise,item.work,copy.config.level);
+  Object.assign(item,{...target,reps:manual?Math.min(item.reps,target.reps):target.reps,repsMode:manual?'manual':'auto'});
+  for(const step of pending){const next=repetitionTarget(step.exercise,step.duration,copy.config.level);Object.assign(step,{...next,reps:manual?Math.min(step.reps,next.reps):next.reps});}
  }
  return copy;
 }

@@ -3,7 +3,7 @@ import {clusterRepTime,clusterPause} from './training.js';
 export function repetitionTiming(step){
  const count=Number(step.reps)||0;if(!count||step.kind==='rest'||step.kind==='transition')return null;
  const start=Math.min(6,Math.max(0,step.duration-2));
- return {count,start,interval:step.cluster?step.cadence:count>1?Math.max(.5,(step.duration-start-2)/(count-1)):0};
+ return {count,start,interval:step.cluster?step.cadence:count>1?Math.max(step.cadence||.5,(step.duration-start-(step.cadence||2))/(count-1)):0};
 }
 export function repetitionAt(step,elapsed){if(step.cluster&&step.kind==='work'){let count=0;while(count<step.reps&&elapsed+1e-6>=clusterRepTime(count,step))count++;return count}const t=repetitionTiming(step);if(!t||elapsed+1e-6<t.start)return 0;return t.count===1?1:Math.min(t.count,Math.floor((elapsed-t.start+1e-6)/t.interval)+1)}
 const countWords=['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
@@ -11,7 +11,7 @@ export function spokenNumber(n){if(n<20)return countWords[n]??String(n);const te
 // Pronunciation hints belong only to the speech engine, not exercise names or UI.
 export function speechPronunciation(text){return text.replace(/flexões/gi,word=>word.replace(/e/i,letter=>letter==='E'?'É':'é'))}
 export class CoachAudio {
- constructor(getPreferences,onStatus=()=>{}){this.preferences=getPreferences;this.onStatus=onStatus;this.context=null;this.voices=[];this.activeNodes=new Set();this.lastInstruction='';this.lastSpoken='';this.error='';this.speechError='';this.beepCount=0;this.spokenCount=0;this.resetCue();this.refreshVoices();globalThis.speechSynthesis?.addEventListener('voiceschanged',()=>this.refreshVoices())}
+ constructor(getPreferences,onStatus=()=>{},onNarration=()=>{}){this.onNarration=onNarration;this.preferences=getPreferences;this.onStatus=onStatus;this.context=null;this.voices=[];this.activeNodes=new Set();this.lastInstruction='';this.lastSpoken='';this.error='';this.speechError='';this.beepCount=0;this.spokenCount=0;this.resetCue();this.refreshVoices();globalThis.speechSynthesis?.addEventListener('voiceschanged',()=>this.refreshVoices())}
  notify(){this.onStatus(this.status)}
  get status(){return {context:this.context?.state||'not-started',voice:this.voice?.name||'',voiceAvailable:!!this.voice,beepCount:this.beepCount,spokenCount:this.spokenCount,lastInstruction:this.lastInstruction,lastSpoken:this.lastSpoken,error:this.error||this.speechError}}
  refreshVoices(){this.voices=(globalThis.speechSynthesis?.getVoices()||[]).filter(v=>v.lang.toLowerCase().replaceAll('_','-')==='pt-pt');this.notify()}
@@ -22,14 +22,19 @@ export class CoachAudio {
  try{if(!Audio)throw Error('Este navegador não disponibiliza áudio para os bips.');if(!this.context||this.context.state==='closed'){this.context=new Audio();this.context.addEventListener?.('statechange',()=>this.notify())}await this.context.resume();if(this.context.state!=='running')this.error='Som bloqueado pelo navegador. Toca em «Testar som» para o ativar.';globalThis.speechSynthesis?.resume?.()}catch(err){this.error=err.message||'Não foi possível ativar o áudio.'}
  this.refreshVoices();return this.context?.state==='running';
  }
- stop(){globalThis.speechSynthesis?.cancel();for(const node of this.activeNodes){try{node.stop();node.disconnect()}catch{}}this.activeNodes.clear();if(this.context?.state==='running')this.context.suspend().catch(()=>{});this.notify()}
- speak(text,{priority='instruction'}={}){
+ stop(){this.endNarration?.();globalThis.speechSynthesis?.cancel();for(const node of this.activeNodes){try{node.stop();node.disconnect()}catch{}}this.activeNodes.clear();if(this.context?.state==='running')this.context.suspend().catch(()=>{});this.notify()}
+ speak(text,{priority='instruction',hold=false}={}){
  const p=this.preferences();if(!p.voice||!this.voice||!globalThis.SpeechSynthesisUtterance)return false;
- try{const synth=globalThis.speechSynthesis;if(priority!=='count')synth.cancel();synth.resume?.();const u=new SpeechSynthesisUtterance(speechPronunciation(text));u.lang='pt-PT';u.voice=this.voice;u.volume=Number(p.voiceVolume);u.rate=priority==='count'?1.08:1.1;
- u.onstart=()=>{this.lastSpoken=text;this.spokenCount++;this.speechError='';this.notify()};u.onerror=event=>{if(!['canceled','interrupted'].includes(event.error)){this.speechError='A voz foi interrompida pelo navegador. Testa o som para a reativar.';this.notify()}};
- // Counts queue after the short announcement; they never cancel its name or series number.
+ try{const synth=globalThis.speechSynthesis;if(priority!=='count'){this.endNarration?.();synth.cancel();}synth.resume?.();const u=new SpeechSynthesisUtterance(speechPronunciation(text));u.lang='pt-PT';u.voice=this.voice;u.volume=Number(p.voiceVolume);u.rate=priority==='count'?1.08:1.1;
+ let finish=()=>{};
+ if(hold){const release=this.onNarration()||(()=>{});this.narrationPending=true;let done=false;
+ const timeout=setTimeout(()=>finish(),15000);
+ finish=()=>{if(done)return;done=true;clearTimeout(timeout);this.narrationPending=false;if(this.endNarration===finish)this.endNarration=null;release()};this.endNarration=finish;}
+ u.onend=finish;
+ u.onstart=()=>{this.lastSpoken=text;this.spokenCount++;this.speechError='';this.notify()};u.onerror=event=>{finish();if(!['canceled','interrupted'].includes(event.error)){this.speechError='A voz foi interrompida pelo navegador. Testa o som para a reativar.';this.notify()}};
+ // The workout clock waits for the instruction to finish; counts cannot queue behind it.
  synth.speak(u);if(priority!=='count')this.lastInstruction=text;this.notify();return true;
- }catch{this.speechError='Não foi possível reproduzir a voz pt-PT.';this.notify();return false}
+ }catch{this.endNarration?.();this.speechError='Não foi possível reproduzir a voz pt-PT.';this.notify();return false}
  }
  beep(type='tick'){
  const p=this.preferences();if(!p.beeps||Number(p.beepVolume)<=0)return false;
@@ -40,11 +45,11 @@ export class CoachAudio {
  announceStep(snap,plan){const {step}=snap,pause=clusterPause(step,step.duration-snap.remaining);if(pause){this.beep('rest');this.speak(`Pausa. Faltam ${spokenNumber(Math.ceil(pause.remaining))} segundos.`);return}const next=plan.timeline.slice(snap.index+1).find(s=>s.exercise&&s.kind!=='rest');
  if(step.kind==='rest'){this.beep('rest');this.speak(`Descansa ${spokenNumber(Math.ceil(snap.remaining))} segundos.${next?.exercise?' A seguir: '+next.exercise.name+'.':''}`)}
  else if(step.kind==='amrap'){this.beep('block');const b=plan.blocks?.find(b=>b.id===step.blockId),item=b?.items[(snap.amrapIndex||0)%b.items.length];this.speak(item?`AMRAP. ${item.exercise.name}. ${item.reps?spokenNumber(item.reps)+' repetições.':'Mantém a posição indicada.'} Ao teu ritmo. Confirma quando terminares.`:'AMRAP. Repete o circuito ao teu ritmo. Confirma cada exercício no ecrã.')}
- else if(step.exercise){this.beep(step.round===1?'block':'start');const series=step.sets>1?` Série ${spokenNumber(step.round)} de ${spokenNumber(step.sets)}.`:'';this.speak(`${step.exercise.name}.${series}${step.reps?' '+spokenNumber(step.reps)+' repetições.':' Começa.'}`)}
+ else if(step.exercise){this.beep(step.round===1?'block':'start');const series=step.sets>1?` Série ${spokenNumber(step.round)} de ${spokenNumber(step.sets)}.`:'';this.speak(`${step.exercise.name}.${series}${step.reps?' '+spokenNumber(step.reps)+' repetições.':' Começa.'}`,{hold:!!step.reps})}
  else{this.beep('end');this.speak('Recupera e prepara-te para o próximo bloco.')}
  }
  cue(snap,plan){
- if(!snap.running||snap.finished)return;
+ if(!snap.running||snap.finished||this.narrationPending)return;
  const p=this.preferences(),{step,remaining}=snap,elapsed=Math.max(0,step.duration-remaining);
  const key=[step.id,step.exercise?.id||'',step.round,step.kind,step.kind==='amrap'?snap.amrapIndex||0:''].join(':');
  const entered=key!==this.stepKey||elapsed<this.lastElapsed-.05;
@@ -54,7 +59,7 @@ export class CoachAudio {
  if(group!==this.clusterRest){
   const wasRest=this.clusterRest;this.clusterRest=group;
   if(pause){this.beep('rest');this.speak(`Pausa de ${spokenNumber(step.cluster.rest)} segundos.`)}
-  else if(wasRest){this.speak('Continua.',{priority:'count'})}
+  else if(wasRest){this.speak('Começa.',{hold:true});if(this.narrationPending)return}
  }
  if(pause)return;
  const rep=repetitionAt(step,elapsed);let repCue=false;
