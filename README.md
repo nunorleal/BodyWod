@@ -301,3 +301,19 @@ Validação: 116 testes passaram. Verificados todos os exercícios por repetiç�
 «Meus treinos» e «Biblioteca» passam a apresentar um botão «Exportar / importar dados». Abre o painel «Os teus dados», com os botões existentes de exportação e importação, sem ser necessário procurar nas definições. O painel mostra explicitamente a quantidade de treinos guardados e de exercícios favoritos e identifica-os na descrição do conteúdo da cópia. O formato JSON completo e a junção sem duplicados mantêm-se.
 
 Validação: 7 testes de cópia de segurança e dos ficheiros HTML passaram, incluindo treino guardado marcado como favorito, notas e identificador real de exercício favorito. Confirmados no navegador os acessos em Meus treinos e na Biblioteca.
+
+### Dados comuns no menu principal — versão 1.26
+
+A exportação e importação passam a ser acessíveis exclusivamente por dois botões com ícones no topo direito do ecrã de escolha Crossfit/FitTempo. Ambos operam sobre a cópia completa das duas áreas. Os nomes acessíveis e as dicas identificam as ações sem texto visível nos botões. Foram retirados os acessos repetidos das definições, Biblioteca e Meus treinos. O seletor de ficheiro é agora global, para funcionar diretamente no menu principal. Os avisos de falha de gravação encaminham para esse ecrã.
+
+Validação: 7 testes de cópia de segurança e dos ficheiros HTML passaram; confirmada no navegador a presença dos dois ícones no menu principal.
+
+### Velocidade por exercício — versão 1.27
+
+As flexões clássicas passam a usar 2 segundos por repetição nos três níveis. Durante os exercícios Crossfit com contagem automática, os botões **+** e **−** permitem acelerar ou abrandar em passos de 0,25 s, mostrando os segundos por repetição. A preferência fica guardada por exercício (entre 0,5 e 10 s) e é aplicada aos treinos seguintes, sem alterar o ritmo dos outros exercícios.
+
+Mudar a velocidade mantém as repetições já contadas, a fração do movimento em curso e as micropausas. A duração da etapa atual, das etapas futuras do mesmo exercício e o tempo total restante são recalculados. Depois de um ajuste pessoal, a duração efetiva do plano pode diferir dos minutos inicialmente pedidos. Sessões em pausa e histórico conservam a sequência ajustada; as preferências são incluídas na exportação/importação de dados.
+
+No FitTempo, a predefinição «100 Flexões» passa a 30 BPM (2 s/repetição). As configurações personalizadas guardadas continuam disponíveis.
+
+Validação: 124 testes passaram, incluindo alterações durante movimentos e micropausas, preservação da contagem, recuperação e cópia de segurança. Confirmado no navegador o ajuste de 2,5 para 2 s por flexão: manteve 3 de 27 repetições e recalculou o tempo restante de 51:48 para 51:33. Após recarregar e recuperar a sessão, o ritmo e o progresso mantiveram-se, em pausa. Pré-visualização: `assets/previews/personal-pace-1.27.png`.

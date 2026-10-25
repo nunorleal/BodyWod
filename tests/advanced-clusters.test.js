@@ -7,37 +7,37 @@ import {exercises} from '../src/exercises.js';
 import {SessionClock} from '../src/timer.js';
 const push=exercises.find(e=>e.name==='Flexões clássicas');
 const step=()=>({id:'push',kind:'work',duration:120,start:0,end:120,round:1,sets:2,exercise:push,...repetitionTarget(push,120,3)});
-test('two-minute advanced pushups contain 31 reps, exact 3 s cadence and two 10 s pauses after 15',()=>{
- const s=step();assert.equal(s.reps,31);assert.equal(repetitionTiming(s).interval,3);
+test('two-minute advanced pushups contain 45 reps, exact 2 s cadence and two 10 s pauses after 15',()=>{
+ const s=step();assert.equal(s.reps,45);assert.equal(repetitionTiming(s).interval,2);
  assert.equal(repetitionAt(s,5.99),0);assert.equal(repetitionAt(s,6),1);
  for(let i=0;i<s.reps;i++){
   const at=clusterRepTime(i,s);assert.equal(repetitionAt(s,at),i+1);
-  if(i){const gap=at-clusterRepTime(i-1,s);assert.equal(gap,i%15===0?13:3)}
+  if(i){const gap=at-clusterRepTime(i-1,s);assert.equal(gap,i%15===0?12:2)}
  }
- for(const [from,to,count] of [[51,61,15],[106,116,30]]){
+ for(const [from,to,count] of [[36,46,15],[76,86,30]]){
   assert.equal(clusterPause(s,from).remaining,10);assert.equal(repetitionAt(s,to-.01),count);assert.equal(clusterPause(s,to),null);assert.equal(repetitionAt(s,to),count+1);
  }
- assert.equal(repetitionAt(s,119.9),31);assert.equal(clusterPause(s,119.9),null);
+ assert.equal(repetitionAt(s,119.9),45);assert.equal(clusterPause(s,119.9),null);
 });
-test('real clock and coach emit all 31 rep bips, pause announcements and no counts inside recoveries',()=>{
+test('real clock and coach emit all 45 rep bips, pause announcements and no counts inside recoveries',()=>{
  const s=step(),plan={duration:120,timeline:[s]},heard=[],bips=[];let now=0;
  const clock=new SessionClock(plan,{now:()=>now}),audio=new CoachAudio(()=>({voiceMode:'full',advanceWarning:true}));
  audio.beep=type=>bips.push({type,at:now/1000});audio.speak=(text,options)=>heard.push({text,priority:options?.priority,at:now/1000});
  clock.start();for(now=0;now<120000;now+=50)audio.cue(clock.tick(),plan);
- assert.equal(bips.filter(x=>x.type==='rep').length,31);
- assert.deepEqual(heard.filter(x=>x.priority==='count'&&x.text!=='Continua.').map(x=>x.text),Array.from({length:31},(_,i)=>spokenNumber(i+1)));
+ assert.equal(bips.filter(x=>x.type==='rep').length,45);
+ assert.deepEqual(heard.filter(x=>x.priority==='count'&&x.text!=='Continua.').map(x=>x.text),Array.from({length:45},(_,i)=>spokenNumber(i+1)));
  assert.equal(heard.filter(x=>x.text==='Pausa de dez segundos.').length,2);
  assert.equal(heard.filter(x=>x.text==='Começa.').length,2);
  assert.ok(bips.filter(x=>x.type==='rep').every(x=>!clusterPause(s,x.at)));
 });
 test('recovery in the middle of a cluster pause remains paused and preserves elapsed/count',()=>{
- const s=step(),p={duration:120,timeline:[s]},clock=new SessionClock(p,{now:()=>0});clock.seek(110);const restored=SessionClock.restore(clock.serialize(),{now:()=>999999});
+ const s=step(),p={duration:120,timeline:[s]},clock=new SessionClock(p,{now:()=>0});clock.seek(80);const restored=SessionClock.restore(clock.serialize(),{now:()=>999999});
  assert.equal(restored.running,false);assert.equal(repetitionAt(s,restored.elapsed),30);assert.equal(clusterPause(s,restored.elapsed).remaining,6);
- const heard=[],audio=new CoachAudio(()=>({}));audio.beep=()=>{};audio.speak=t=>heard.push(t);audio.cue({running:true,index:0,step:s,remaining:10},p);assert.match(heard[0],/Pausa.*seis segundos/);
+ const heard=[],audio=new CoachAudio(()=>({}));audio.beep=()=>{};audio.speak=t=>heard.push(t);audio.cue({running:true,index:0,step:s,remaining:40},p);assert.match(heard[0],/Pausa.*seis segundos/);
 });
 test('levels preserve movement time and advanced retains clustered volume',()=>{
- for(const level of [1,2]){const t=repetitionTarget(push,60,level);assert.equal(t.cluster,null);assert.equal(t.reps,Math.floor(54/(level===1?4:3.5)))}
- assert.equal(repetitionTarget(push,60,3).reps,15);
+ for(const level of [1,2]){const t=repetitionTarget(push,60,level);assert.equal(t.cluster,null);assert.equal(t.reps,Math.floor(54/(2)))}
+ assert.equal(repetitionTarget(push,60,3).reps,22);
  for(const name of ['Burpees','Agachamentos','Lunges alternados','Sit-ups']){const e=exercises.find(e=>e.name===name);assert.ok(repetitionTarget(e,120,3).reps>repetitionTarget(e,60,2).reps,name)}
 });
 test('advanced plans retain exact time across short/long modes and valid two-minute work where possible',()=>{

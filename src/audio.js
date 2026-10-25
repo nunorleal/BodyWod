@@ -2,10 +2,10 @@ import {clusterRepTime,clusterPause} from './training.js';
 // The same repetition schedule drives the visible counter and the spoken/bip cues.
 export function repetitionTiming(step){
  const count=Number(step.reps)||0;if(!count||step.kind==='rest'||step.kind==='transition')return null;
- const start=Math.min(6,Math.max(0,step.duration-2));
- return {count,start,interval:step.cluster?step.cadence:count>1?Math.max(step.cadence||.5,(step.duration-start-(step.cadence||2))/(count-1)):0};
+ const start=step.repTimes?.[0]??Math.min(6,Math.max(0,step.duration-2));
+ return {count,start,interval:step.repTimes?step.cadence:step.cluster?step.cadence:count>1?Math.max(step.cadence||.5,(step.duration-start-(step.cadence||2))/(count-1)):0};
 }
-export function repetitionAt(step,elapsed){if(step.cluster&&step.kind==='work'){let count=0;while(count<step.reps&&elapsed+1e-6>=clusterRepTime(count,step))count++;return count}const t=repetitionTiming(step);if(!t||elapsed+1e-6<t.start)return 0;return t.count===1?1:Math.min(t.count,Math.floor((elapsed-t.start+1e-6)/t.interval)+1)}
+export function repetitionAt(step,elapsed){if(step.repTimes)return step.repTimes.filter(at=>elapsed+1e-6>=at).length;if(step.cluster&&step.kind==='work'){let count=0;while(count<step.reps&&elapsed+1e-6>=clusterRepTime(count,step))count++;return count}const t=repetitionTiming(step);if(!t||elapsed+1e-6<t.start)return 0;return t.count===1?1:Math.min(t.count,Math.floor((elapsed-t.start+1e-6)/t.interval)+1)}
 const countWords=['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
 export function spokenNumber(n){if(n<20)return countWords[n]??String(n);const tens={20:'vinte',30:'trinta',40:'quarenta',50:'cinquenta',60:'sessenta'};const base=Math.floor(n/10)*10;return tens[base]?tens[base]+(n%10?' e '+countWords[n%10]:''):String(n)}
 // Pronunciation hints belong only to the speech engine, not exercise names or UI.

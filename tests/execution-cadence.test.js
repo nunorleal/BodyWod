@@ -6,8 +6,10 @@ import {repetitionTiming} from '../src/audio.js';
 import {repetitionTarget,generate,editItem,updateRepetitionTargets} from '../src/generator.js';
 import {COUNTER_DOCUMENT} from '../src/counter-document.js';
 const get=name=>exercises.find(e=>e.name===name);
-test('pushups and squats use a full 3-second movement even at advanced, with slower technical variants and other levels',()=>{
- for(const name of ['Flexões clássicas','Agachamentos']){const e=get(name);assert.deepEqual([1,2,3].map(level=>executionCadence(e,level)),[4,3.5,3]);assert.equal(repetitionTarget(e,120,3).reps,31)}
+test('normal pushups use 2 seconds while squats and technical variants retain their own defaults',()=>{
+ assert.deepEqual([1,2,3].map(level=>executionCadence(get('Flexões clássicas'),level)),[2,2,2]);
+ assert.equal(repetitionTarget(get('Flexões clássicas'),120,3).reps,45);
+ assert.deepEqual([1,2,3].map(level=>executionCadence(get('Agachamentos'),level)),[4,3.5,3]);
  for(const name of ['Flexões com pausa','Flexões excêntricas','Agachamentos com descida lenta'])assert.ok(executionCadence(get(name),3)>=5,name);
  assert.ok(executionCadence(get('Burpees'),3)>executionCadence(get('Agachamentos'),3));
 });
@@ -28,9 +30,9 @@ test('legacy manual targets are capped only in future stages while already start
  assert.ok(item);item.reps=56;item.cadence=1.5;item.repsMode='manual';
  const steps=plan.timeline.filter(s=>s.itemId===item.id&&s.kind==='work');for(const step of steps){step.reps=56;step.cadence=1.5}
  const migrated=updateRepetitionTargets(plan,{from:steps[0].start+1});assert.deepEqual(migrated.timeline.find(s=>s.id===steps[0].id),steps[0]);
- for(const step of migrated.timeline.filter(s=>s.itemId===item.id&&s.kind==='work'&&s.start>steps[0].start)){assert.equal(step.cadence,3);assert.ok(step.reps<=repetitionTarget(step.exercise,step.duration,3).reps)}
+ for(const step of migrated.timeline.filter(s=>s.itemId===item.id&&s.kind==='work'&&s.start>steps[0].start)){assert.equal(step.cadence,2);assert.ok(step.reps<=repetitionTarget(step.exercise,step.duration,3).reps)}
 });
-test('FitTempo pushup preset uses 3 seconds per rep while squat preset retains its 5-second movement',()=>{
- assert.match(COUNTER_DOCUMENT,/preset === 'pushups'[\s\S]*?inputBpm.value = 20/);
+test('FitTempo pushup preset uses 2 seconds per rep while squat preset retains its 5-second movement',()=>{
+ assert.match(COUNTER_DOCUMENT,/preset === 'pushups'[\s\S]*?inputBpm.value = 30/);
  assert.match(COUNTER_DOCUMENT,/preset === 'squats'[\s\S]*?tempoEccentric.value = 3;[\s\S]*?tempoPause1.value = 1;[\s\S]*?tempoConcentric.value = 1;/);
 });

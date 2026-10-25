@@ -6,7 +6,7 @@ import {generate} from '../src/generator.js';
 import {SessionClock} from '../src/timer.js';
 function fixture(){
  const data=emptyState(),plan=generate({minutes:30,level:1},{},42);
- plan.favorite=true;plan.notes='Treino guardado';data.saved=[plan];data.lastPlan=plan;data.favorites=['ex-1-01'];data.excluded=['burpee'];data.preferences.voice=false;
+ plan.favorite=true;plan.notes='Treino guardado';data.exerciseCadences={'ex-1-01':2.25};data.saved=[plan];data.lastPlan=plan;data.favorites=['ex-1-01'];data.excluded=['burpee'];data.preferences.voice=false;
  data.session=new SessionClock(plan).serialize();data.history=[{id:'session-1',status:'completed',date:new Date().toISOString(),plan,completedSteps:[],completedReps:{},rounds:{},changes:[],actualSeconds:600,notes:'Bom treino',rating:5}];
  data.unsavedSummary=data.history[0];
  data.fittempo={history:[{id:'fit-1',date:'19/10, 12:30',sets:100,reps:1000,tempo:'60 BPM'}],settings:{voice:false,beeps:true},inputs:{inputSeriesGoal:'100',automaticGoalMode:'series'},manual:{id:'manual-1',count:4,target:100,elapsed:18000,automatic:true,calibrationStart:0,interval:4000,nextAt:20000}};

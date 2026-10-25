@@ -22,12 +22,13 @@ export function parseBackup(raw){
  function safe(value){if(!value||typeof value!=='object')return;for(const [k,v]of Object.entries(value)){if(['__proto__','prototype','constructor'].includes(k))throw Error('Chave inválida no backup.');safe(v)}}safe(data);
  const state=data?.format==='bodywod.backup'&&data.backupVersion===2?data.data:data;
  if(!plain(state)||state.version!==1||!plain(state.preferences)||['saved','history','favorites','excluded'].some(k=>!Array.isArray(state[k])))throw Error('O ficheiro não é um backup BodyWOD válido.');
- const validPlan=p=>{if(!plain(p)||typeof p.id!=='string'||!Array.isArray(p.blocks)||!Array.isArray(p.timeline)||!p.timeline.length||!plain(p.config)||!Number.isFinite(p.duration)||p.duration<1||p.blocks.some(b=>!plain(b)||!Array.isArray(b.items)||b.items.some(i=>!i.exercise||!Array.isArray(i.exercise.primary)||!Array.isArray(i.exercise.instructions))))throw Error('Estrutura de treino inválida no backup.');};
+ const validPlan=p=>{if(!plain(p)||typeof p.id!=='string'||!Array.isArray(p.blocks)||!Array.isArray(p.timeline)||!p.timeline.length||!plain(p.config)||!Number.isFinite(p.duration)||p.duration<1||p.blocks.some(b=>!plain(b)||!Array.isArray(b.items)||b.items.some(i=>!i.exercise||!Array.isArray(i.exercise.primary)||!Array.isArray(i.exercise.instructions))))throw Error('Estrutura de treino inválida no backup.');for(const s of p.timeline)if(s.repTimes&&(!Array.isArray(s.repTimes)||s.repTimes.length!==s.reps||s.repTimes.some((t,i)=>!Number.isFinite(t)||t<0||(i>0&&t<s.repTimes[i-1]))||!Number.isFinite(s.cadence)||s.cadence<.5||s.cadence>10))throw Error('Cadência inválida no plano.');};
  state.saved.forEach(validPlan);state.history.forEach(h=>{validPlan(h.plan);if(!h.id||!Array.isArray(h.completedSteps)||!h.completedReps||!h.rounds||!Array.isArray(h.changes)||!Number.isFinite(h.actualSeconds))throw Error('Sessão inválida no backup.')});
  if(state.lastPlan)validPlan(state.lastPlan);if(state.session){validPlan(state.session.plan);if(!Number.isFinite(state.session.elapsed)||state.session.elapsed<0)throw Error('Sessão em pausa inválida.');}
  if(state.unsavedSummary){validPlan(state.unsavedSummary.plan);if(!state.unsavedSummary.id)throw Error('Resumo inválido.');}
  for(const k of ['favorites','excluded'])if(state[k].some(id=>typeof id!=='string'))throw Error('Favoritos ou exclusões inválidos.');
  for(const [key,value]of Object.entries(emptyState().preferences))if(key in state.preferences&&typeof state.preferences[key]!==typeof value)throw Error('Preferências inválidas.');
+ if(state.exerciseCadences&&(!plain(state.exerciseCadences)||Object.values(state.exerciseCadences).some(v=>!Number.isFinite(v)||v<.5||v>10)))throw Error('Ritmos de exercícios inválidos.');
  if(state.generatorConfig&&(!plain(state.generatorConfig)||!Array.isArray(state.generatorConfig.included)||!Number.isFinite(state.generatorConfig.minutes)||!Number.isFinite(state.generatorConfig.level)))throw Error('Configuração do gerador inválida.');
  if(state.fittempo)validateFitTempo(state.fittempo);
  return state;
@@ -38,6 +39,7 @@ export function mergeBackup(current,incoming){
  for(const k of ['saved','history'])next[k]=mergeRecords(current[k],incoming[k]);
  for(const k of ['favorites','excluded'])next[k]=[...new Set([...current[k],...incoming[k]])];
  next.preferences={...current.preferences,...incoming.preferences};
+ next.exerciseCadences={...current.exerciseCadences,...incoming.exerciseCadences};
  next.lastPlan=current.lastPlan||incoming.lastPlan||null;
  next.session=current.session||incoming.session||null;
  if(incoming.generatorConfig)next.generatorConfig=structuredClone(incoming.generatorConfig);
