@@ -24,7 +24,7 @@ export const advancedWodSequence=[
 // Seconds for one complete movement; level changes density without rushing the motion.
 export function executionCadence(exercise,level=1){
  if(exercise.execution!=='reps')return null;
- const n=exercise.name;let seconds=2.5;
+ const n=exercise.name;if(n==='Flexões clássicas')return 2;let seconds=2.5;
  if(/^Burpees|Inchworm/i.test(n))seconds=5;
  else if(/pausa|excêntric|lent[ao]|descida lenta/i.test(n))seconds=5;
  else if(/Prancha com subida|Flexões hindu/i.test(n))seconds=4;
@@ -39,12 +39,13 @@ export function advancedRepProfile(exercise){
  return {cadence:executionCadence(exercise,3),cap:90,cluster:{every:/^Burpees|Inchworm/i.test(exercise.name)?10:15,rest:10}};
 }
 // A cluster window includes preparation, repetitions and its short recoveries.
-export function clusterRepTime(index,{cadence=3,cluster},start=6){return start+index*cadence+Math.floor(index/cluster.every)*cluster.rest}
+export function clusterRepTime(index,{cadence=3,cluster,repTimes},start=6){if(repTimes)return repTimes[index];return start+index*cadence+Math.floor(index/cluster.every)*cluster.rest}
 export function clusterTarget(duration,profile){
  let count=0;while(count<profile.cap&&clusterRepTime(count,profile)<=duration-profile.cadence)count++;
  return count;
 }
 export function clusterPause(step,elapsed){
+ if(step.pauseWindows){const pause=step.pauseWindows.find(p=>elapsed>=p.start&&elapsed<p.end);return pause?{group:pause.group,remaining:pause.end-elapsed}:null}
  if(!step.cluster||!step.reps||step.kind!=='work')return null;
  for(let n=step.cluster.every;n<step.reps;n+=step.cluster.every){
   const start=clusterRepTime(n-1,step)+step.cadence,end=clusterRepTime(n,step);

@@ -1,4 +1,4 @@
-export const emptyState=()=>({version:1,preferences:{voiceMode:'full',voice:true,beeps:true,voiceVolume:.85,beepVolume:.35,voiceURI:'',advanceWarning:true},favorites:[],excluded:[],saved:[],history:[],session:null,lastPlan:null});
+export const emptyState=()=>({version:1,preferences:{voiceMode:'full',voice:true,beeps:true,voiceVolume:.85,beepVolume:.35,voiceURI:'',advanceWarning:true},exerciseCadences:{},favorites:[],excluded:[],saved:[],history:[],session:null,lastPlan:null});
 
 // Intern equal JSON subtrees, including repeated exercise and plan snapshots.
 // Resolve each reference independently on read so historical records stay independent.

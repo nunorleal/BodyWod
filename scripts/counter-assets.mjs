@@ -53,8 +53,8 @@ export function buildCounter(){
  html=html.replace('function pauseWorkout() {','function pauseWorkout() {cancelCounterLeadIn();');
  html=html.replace('function resetWorkout() {','function resetWorkout() {cancelCounterLeadIn();');
  // Strength presets allow a complete repetition; explicit user settings stay editable.
- html=html.replace('id="inputBpm" value="60"','id="inputBpm" value="20"');
- html=html.replace("if (preset === 'pushups') {\n                    inputTotalReps.value = 100;\n                    inputRepsPerSet.value = 10;\n                    inputBpm.value = 60;", "if (preset === 'pushups') {\n                    inputTotalReps.value = 100;\n                    inputRepsPerSet.value = 10;\n                    inputBpm.value = 20;");
+ html=html.replace('id="inputBpm" value="60"','id="inputBpm" value="30"');
+ html=html.replace("if (preset === 'pushups') {\n                    inputTotalReps.value = 100;\n                    inputRepsPerSet.value = 10;\n                    inputBpm.value = 60;", "if (preset === 'pushups') {\n                    inputTotalReps.value = 100;\n                    inputRepsPerSet.value = 10;\n                    inputBpm.value = 30;");
  // Retain the supplied app's history key. Failure never aborts workout completion.
  html=html.replace('function getHistory() {','let integratedHistory=null,integratedReadFailed=false;\n function getHistory() {');
  html=html.replace("return JSON.parse(localStorage.getItem('fittempo_history') || '[]');", "if(integratedHistory)return integratedHistory;const data=JSON.parse(localStorage.getItem('fittempo_history')||'[]');if(!Array.isArray(data))throw Error('Histórico inválido');return data;");

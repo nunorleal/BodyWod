@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import {buildCounter} from './counter-assets.mjs';
 buildCounter();
-const files=['version','counter-document','counter','exercises','storage','backup','timer','training','generator','audio','anatomy','movement','app'];
+const files=['version','counter-document','counter','exercises','storage','backup','timer','training','pace','generator','audio','anatomy','movement','app'];
 let js=files.map(name=>fs.readFileSync(`src/${name}.js`,'utf8').replace(/^import .+;\s*$/gm,'').replace(/^export /gm,'')).join('\n');
 js=js.replaceAll('</script','<\\/script');
 const css=fs.readFileSync('styles.css','utf8');

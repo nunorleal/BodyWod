@@ -8,7 +8,7 @@ const main=exercises.filter(e=>trainingRole(e)==='training'&&suitableForMain(e,3
 test('all advanced dynamic exercises have an explicit rhythm, grouping and greater two-minute volume',()=>{
  for(const e of main.filter(e=>e.execution==='reps')){
   const p=advancedRepProfile(e),t=repetitionTarget(e,120,3);
-  assert.ok(p&&p.cadence>=2.5&&p.cadence<=5.5,e.name);assert.ok([10,15].includes(p.cluster.every));assert.equal(p.cluster.rest,10);
+  assert.ok(p&&p.cadence>=2&&p.cadence<=5.5,e.name);assert.ok([10,15].includes(p.cluster.every));assert.equal(p.cluster.rest,10);
   assert.ok(t.reps>repetitionTarget(e,60,2).reps,e.name);
   assert.ok(clusterRepTime(t.reps-1,t)+t.cadence<=120,e.name);
  }
