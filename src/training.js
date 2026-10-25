@@ -21,23 +21,27 @@ export const advancedWodSequence=[
  {category:'Pernas e glúteos',focus:['Agachamentos','Agachamentos com pausa','Agachamentos sumo','Agachamentos com salto','Agachamentos com descida lenta']},
  {category:'Abdominais e core',focus:['Sit-ups','Tuck-ups','V-ups','Bicycle crunches','Crunch com pernas verticais']}
 ];
+// Seconds for one complete movement; level changes density without rushing the motion.
+export function executionCadence(exercise,level=1){
+ if(exercise.execution!=='reps')return null;
+ const n=exercise.name;let seconds=2.5;
+ if(/^Burpees|Inchworm/i.test(n))seconds=5;
+ else if(/pausa|excêntric|lent[ao]|descida lenta/i.test(n))seconds=5;
+ else if(/Prancha com subida|Flexões hindu/i.test(n))seconds=4;
+ else if(exercise.category==='Peito e tríceps'||/Pike push-ups/i.test(n))seconds=3;
+ else if(['agachar','passada'].includes(exercise.pattern)||/Agachamento|Lunges|Pontes de glúteos/i.test(n))seconds=3;
+ else if(exercise.category==='Costas e cadeia posterior'||/Sit-ups|Tuck-ups|V-ups|Elevações de pernas|Dead bug/i.test(n))seconds=3;
+ if(exercise.difficulty===3&&!/pausa|excêntric|lent[ao]|descida lenta/i.test(n))seconds+=.5;
+ return seconds+({1:1,2:.5,3:0}[level]??1);
+}
 export function advancedRepProfile(exercise){
  if(exercise.execution!=='reps')return null;
- const n=exercise.name;
- let cadence=1.5,every=15;
- if(/pausa|excêntric|lent[ao]|descida lenta/i.test(n))cadence=3.5;
- else if(/^Burpees|Inchworm/i.test(n)){cadence=3;every=10}
- else if(exercise.category==='Costas e cadeia posterior')cadence=2;
- else if(['Tuck-ups','V-ups'].includes(n))cadence=2;
- else if(exercise.impact==='high'||exercise.difficulty===3)cadence=2;
- // Classic pushups retain the requested 1.5 s rhythm; technical variants take longer.
- if(exercise.category==='Peito e tríceps'&&!/pausa|excêntric|lent[ao]/i.test(n))cadence=1.5;
- return {cadence,cap:90,cluster:{every,rest:10}};
+ return {cadence:executionCadence(exercise,3),cap:90,cluster:{every:/^Burpees|Inchworm/i.test(exercise.name)?10:15,rest:10}};
 }
 // A cluster window includes preparation, repetitions and its short recoveries.
-export function clusterRepTime(index,{cadence=1.5,cluster},start=6){return start+index*cadence+Math.floor(index/cluster.every)*cluster.rest}
+export function clusterRepTime(index,{cadence=3,cluster},start=6){return start+index*cadence+Math.floor(index/cluster.every)*cluster.rest}
 export function clusterTarget(duration,profile){
- let count=0;while(count<profile.cap&&clusterRepTime(count,profile)<=duration-1.5)count++;
+ let count=0;while(count<profile.cap&&clusterRepTime(count,profile)<=duration-profile.cadence)count++;
  return count;
 }
 export function clusterPause(step,elapsed){

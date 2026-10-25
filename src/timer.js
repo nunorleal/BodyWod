@@ -1,10 +1,12 @@
 export const formatTime=s=>`${Math.floor(Math.max(0,Math.ceil(s))/60).toString().padStart(2,'0')}:${(Math.max(0,Math.ceil(s))%60).toString().padStart(2,'0')}`;
 export class SessionClock {
- constructor(plan,{now=()=>performance.now(),onChange=()=>{}}={}){this.plan=plan;this.now=now;this.onChange=onChange;this.offset=0;this.anchor=0;this.running=false;this.finished=false;this.changes=[];this.completedReps={};this.rounds={};this.lastIndex=-1;this.lastSecond=-1;this.actualOffset=0;this.actualAnchor=0;this.completedSteps=[];this.previousElapsed=0}
- get activeElapsed(){return this.actualOffset+(this.running?Math.min((this.now()-this.actualAnchor)/1000,this.plan.duration-this.offset):0)}
- get elapsed(){return Math.min(this.plan.duration,Math.max(0,this.offset+(this.running?(this.now()-this.anchor)/1000:0)))}
- start(){if(this.finished)return;this.anchor=this.now();this.actualAnchor=this.now();this.running=true}
- pause(){this.actualOffset=this.activeElapsed;this.offset=this.elapsed;this.running=false;this.tick()}
+ constructor(plan,{now=()=>performance.now(),onChange=()=>{}}={}){this.plan=plan;this.now=now;this.onChange=onChange;this.offset=0;this.anchor=0;this.running=false;this.held=false;this.finished=false;this.changes=[];this.completedReps={};this.rounds={};this.lastIndex=-1;this.lastSecond=-1;this.actualOffset=0;this.actualAnchor=0;this.completedSteps=[];this.previousElapsed=0}
+ get activeElapsed(){return this.actualOffset+(this.running&&!this.held?Math.min((this.now()-this.actualAnchor)/1000,this.plan.duration-this.offset):0)}
+ get elapsed(){return Math.min(this.plan.duration,Math.max(0,this.offset+(this.running&&!this.held?(this.now()-this.anchor)/1000:0)))}
+ hold(){if(!this.running||this.held)return;this.actualOffset=this.activeElapsed;this.offset=this.elapsed;this.held=true}
+ releaseHold(){if(!this.held)return;this.held=false;this.anchor=this.now();this.actualAnchor=this.now()}
+ start(){if(this.finished)return;this.held=false;this.anchor=this.now();this.actualAnchor=this.now();this.running=true}
+ pause(){this.actualOffset=this.activeElapsed;this.offset=this.elapsed;this.running=false;this.held=false;this.tick()}
  resume(){this.start()}
  seek(seconds,reason='Avanço manual'){const before=this.elapsed;this.actualOffset=this.activeElapsed;this.actualAnchor=this.now();this.offset=Math.min(this.plan.duration,Math.max(0,seconds));this.anchor=this.now();this.previousElapsed=this.offset;this.finished=false;this.changes.push({at:before,to:this.offset,reason});this.lastIndex=-1;this.tick()}
  getSnapshot(){const elapsed=this.elapsed,steps=this.plan.timeline;let index=steps.findIndex(s=>elapsed<s.end);if(index<0)index=steps.length-1;const step=steps[index];return {elapsed,index,step,remaining:Math.max(0,step.end-elapsed),totalRemaining:Math.max(0,this.plan.duration-elapsed),running:this.running,finished:elapsed>=this.plan.duration}}
