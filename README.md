@@ -323,3 +323,11 @@ Validação: 124 testes passaram, incluindo alterações durante movimentos e mi
 A criação de treinos apresenta um painel «Duração personalizada», com campo de minutos e indicação do intervalo de 10 a 180 minutos inteiros. Mantêm-se os atalhos de 20, 30, 45 e 60 minutos. Escrever outro tempo retira imediatamente a seleção dos atalhos; mudar o nível ou a modalidade conserva o valor indicado. O tempo inclui aquecimento e retorno à calma, respeitando o mínimo de 3 minutos para o bloco principal.
 
 Validação: 18 testes de geração, relógio, persistência e ficheiros HTML passaram. Confirmado no navegador um treino personalizado de 37 minutos, com duração de 37:00 e recuperação do valor ao voltar à configuração. Pré-visualização: `assets/previews/custom-duration-1.28.png`.
+
+### Arranque e continuidade da voz — versão 1.29
+
+As falas mantêm uma referência ativa até terminarem, para não dependerem da vida de uma variável local no motor de voz. Números atrasados deixam de se acumular na fila. Se o navegador omitir o evento de fim, a app deteta que o motor está livre; se nem iniciar a fala, liberta o relógio após uma espera curta, em vez de o deixar parado até 15 segundos. Pausar cancela as falas e os controlos de recuperação pendentes.
+
+O anúncio do exercício termina com «Começa». A execução parte de zero depois desse aviso e a primeira repetição ocorre após uma cadência, sem os seis segundos adicionais de preparação. Os intervalos entre repetições e as micropausas são preservados, assim como a duração programada. Etapas já iniciadas numa sessão recuperada mantêm o progresso. A retoma manual também espera pelo fim de «Começa». O FitTempo recebe a mesma retenção da fala e recuperação quando faltam eventos de voz.
+
+Validação: 128 testes passaram, incluindo a recuperação da voz no FitTempo. Cobertos eventos de início/fim ausentes, callbacks tardios, dez contagens consecutivas, cancelamento ao pausar e arranque em zero. No navegador, verificados relógio a avançar e voz até «quatro» num treino de teste num endereço local separado, preservando a sessão original do utilizador.

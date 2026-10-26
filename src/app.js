@@ -1,4 +1,4 @@
-import {applySavedCadences,retimeExercisePlan,boundedCadence,MIN_CADENCE,MAX_CADENCE} from './pace.js';
+import {prepareSessionPlan,applySavedCadences,retimeExercisePlan,boundedCadence,MIN_CADENCE,MAX_CADENCE} from './pace.js';
 import {makeBackup,parseBackup,mergeBackup,mergeFitTempo,validateFitTempo} from './backup.js';
 import {showCounterPanel,pauseCounterPanel,counterCommand,requestCounterBackup,restoreCounterBackup} from './counter.js';
 import {APP_VERSION} from './version.js';
@@ -114,7 +114,7 @@ function sessionTick(){if(!clock||page!=='active')return;const snap=clock.tick()
  if(snap.finished){finishSession('completed');return}frame=requestAnimationFrame(sessionTick)}
 async function startSession(recover=false){
  if(clock){cancelAnimationFrame(frame);clock.pause();audio.stop()}
- if(recover){clock=SessionClock.restore({...store.state.session,plan:applySavedCadences(updateRepetitionTargets(updateWarmupReferences(store.state.session.plan,{from:store.state.session.elapsed,excluded:store.state.excluded}),{from:store.state.session.elapsed}),store.state.exerciseCadences,{elapsed:store.state.session.elapsed,includeCurrent:false})});plan=clock.plan;amrapIndex=clock.amrapIndex||0;toast('Sessão recuperada em pausa. O tempo com a aplicação fechada não foi contado.')}else{clock=new SessionClock(structuredClone(plan));amrapIndex=0}
+ if(recover){clock=SessionClock.restore({...store.state.session,plan:applySavedCadences(updateRepetitionTargets(updateWarmupReferences(store.state.session.plan,{from:store.state.session.elapsed,excluded:store.state.excluded}),{from:store.state.session.elapsed}),store.state.exerciseCadences,{elapsed:store.state.session.elapsed,includeCurrent:false})});clock.plan=prepareSessionPlan(clock.plan,{elapsed:clock.offset});plan=clock.plan;amrapIndex=clock.amrapIndex||0;toast('Sessão recuperada em pausa. O tempo com a aplicação fechada não foi contado.')}else{clock=new SessionClock(prepareSessionPlan(plan));amrapIndex=0}
  lastCheckpoint=0;paintedStep='';page='active';render();
  if(!recover){audio.resetCue();const activation=audio.unlock();clock.start();const ready=audio.status.context==='running';audio.cue({...clock.getSnapshot(),amrapIndex},clock.plan);activation.then(ok=>{if(ok&&!ready&&page==='active'&&clock?.running)audio.beep('start')});requestWake();if(store.state.preferences.voice&&!audio.voice)toast('Voz pt-PT indisponível. Ativos: instruções visuais e bips.');}
  checkpoint();frame=requestAnimationFrame(sessionTick);
@@ -158,7 +158,7 @@ async function handleClick(event){const el=event.target.closest('[data-action]')
  else if(a==='recover'){modal.close();await startSession(true)}
  else if(a==='discardSession'){if(save(s=>{s.session=null})){modal.close();toast('Sessão em pausa eliminada. Podes iniciar o novo treino.')}}
  else if(a==='changePace'){changeExercisePace(el.dataset.direction)}
- else if(a==='togglePause'){if(clock.running){clock.pause();audio.stop();releaseWake()}else{const activation=audio.unlock();audio.speak('Vamos continuar.');await activation;clock.resume();requestWake()}checkpoint();paintClock(clock.getSnapshot())}
+ else if(a==='togglePause'){if(clock.running){clock.pause();audio.stop();releaseWake()}else{await audio.unlock();clock.resume();audio.speak('Começa.',{hold:true});requestWake()}checkpoint();paintClock(clock.getSnapshot())}
  else if(a==='nextStep'||a==='previousStep'){const s=clock.getSnapshot();audio.stop();audio.resetCue();if(clock.running)await audio.unlock();if(a==='nextStep'){if(s.index===clock.plan.timeline.length-1){openModal(`${modalHead('Terminar agora?')}<p class="small">O último intervalo ainda não terminou. A sessão será guardada como terminada antecipadamente.</p>${btn('confirmStop','Terminar sessão','danger full','style="margin-top:20px"')}`);clock.pause();audio.stop();releaseWake();checkpoint();return}clock.seek(s.step.end,'Etapa avançada manualmente')}else clock.seek(clock.plan.timeline[Math.max(0,s.index-1)].start,'Etapa anterior repetida');paintedStep='';checkpoint()}
  else if(a==='stop'){clock.pause();audio.stop();releaseWake();checkpoint();openModal(`${modalHead('Por hoje, chega?')}<p class="small muted">Podes guardar a sessão realizada ou continuar de onde ficaste.</p><div class="footer-actions">${btn('closeModal','Continuar','secondary')}${btn('confirmStop','Terminar','danger')}</div>`)}
  else if(a==='confirmStop'){modal.close();finishSession('interrupted')}
