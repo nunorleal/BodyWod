@@ -317,3 +317,9 @@ Mudar a velocidade mantém as repetições já contadas, a fração do movimento
 No FitTempo, a predefinição «100 Flexões» passa a 30 BPM (2 s/repetição). As configurações personalizadas guardadas continuam disponíveis.
 
 Validação: 124 testes passaram, incluindo alterações durante movimentos e micropausas, preservação da contagem, recuperação e cópia de segurança. Confirmado no navegador o ajuste de 2,5 para 2 s por flexão: manteve 3 de 27 repetições e recalculou o tempo restante de 51:48 para 51:33. Após recarregar e recuperar a sessão, o ritmo e o progresso mantiveram-se, em pausa. Pré-visualização: `assets/previews/personal-pace-1.27.png`.
+
+### Duração personalizada em destaque — versão 1.28
+
+A criação de treinos apresenta um painel «Duração personalizada», com campo de minutos e indicação do intervalo de 10 a 180 minutos inteiros. Mantêm-se os atalhos de 20, 30, 45 e 60 minutos. Escrever outro tempo retira imediatamente a seleção dos atalhos; mudar o nível ou a modalidade conserva o valor indicado. O tempo inclui aquecimento e retorno à calma, respeitando o mínimo de 3 minutos para o bloco principal.
+
+Validação: 18 testes de geração, relógio, persistência e ficheiros HTML passaram. Confirmado no navegador um treino personalizado de 37 minutos, com duração de 37:00 e recuperação do valor ao voltar à configuração. Pré-visualização: `assets/previews/custom-duration-1.28.png`.
