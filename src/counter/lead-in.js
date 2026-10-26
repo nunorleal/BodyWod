@@ -8,7 +8,7 @@ function startCounterLeadIn(begin){
   cancelCounterLeadIn();begin();
  };
  if(!state.isVoiceEnabled){done();return}
- counterLeadTimer=setTimeout(done,15000);
+ counterLeadTimer=setTimeout(()=>{window.speechSynthesis?.cancel();done()},3000);
  speak('Começa.',false,done);
 }
 function runWorkPhase(){startCounterLeadIn(beginCountedWork)}

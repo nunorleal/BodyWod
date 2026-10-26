@@ -52,3 +52,17 @@ export function applySavedCadences(plan,preferences={},options={}){
  for(const [id,cadence]of Object.entries(preferences||{}))if(Number.isFinite(cadence)&&cadence>=MIN_CADENCE&&cadence<=MAX_CADENCE)result=retimeExercisePlan(result,id,cadence,options);
  return result;
 }
+
+// Narration already supplies preparation. Start at zero, then cue the first
+// movement after one cadence, without another six-second silent countdown.
+export function prepareSessionPlan(original,{elapsed=0}={}){
+ const plan=structuredClone(original);
+ for(const step of plan.timeline){
+  if(step.kind!=='work'||!step.reps||step.start<elapsed)continue;
+  const timing=repetitionTiming(step),times=step.repTimes||Array.from({length:step.reps},(_,i)=>step.cluster?clusterRepTime(i,step):timing.start+i*timing.interval);
+  const first=Math.min(step.cadence||timing.interval||2,times[0]),shift=times[0]-first;
+  step.repTimes=times.map(at=>at-shift);
+  if(step.cluster){step.pauseWindows=[];for(let n=step.cluster.every;n<step.reps;n+=step.cluster.every)step.pauseWindows.push({group:n/step.cluster.every,start:step.repTimes[n]-step.cluster.rest,end:step.repTimes[n]})}
+ }
+ return plan;
+}

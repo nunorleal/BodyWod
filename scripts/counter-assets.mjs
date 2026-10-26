@@ -45,11 +45,9 @@ export function buildCounter(){
  html=html.replace('if (history.length > 20) history.pop(); // guardar últimos 20','');
  html=html.replaceAll('${item.date}','${escapeFitTempoText(item.date)}').replaceAll('${item.tempo}','${escapeFitTempoText(item.tempo)}');
  html=html.replace('function runWorkPhase() {','function beginCountedWork() {');
- html=html.replace('function speak(text, force = false) {','function speak(text, force = false, after = null) {');
- html=html.replace("if ((!state.isVoiceEnabled && !force) || !('speechSynthesis' in window)) return;", "if ((!state.isVoiceEnabled && !force) || !('speechSynthesis' in window)) {after?.();return;}");
- html=html.replace('if(!guideVoice)return;', 'if(!guideVoice){after?.();return;}');
- html=html.replace("utterance.lang = 'pt-PT';", "utterance.lang = 'pt-PT';utterance.onend=()=>after?.();utterance.onerror=()=>after?.();");
- html=html.replace('console.log("Síntese de voz indisponível", e);','console.log("Síntese de voz indisponível", e);after?.();');
+ const speechStart=html.indexOf('        function speak(text, force = false) {'),speechEnd=html.indexOf('        // Manter Ecrã',speechStart);
+ if(speechStart<0||speechEnd<0)throw Error('Voz do FitTempo não encontrada');
+ html=html.slice(0,speechStart)+fs.readFileSync('src/counter/speech.js','utf8')+'\n'+html.slice(speechEnd);
  html=html.replace('function pauseWorkout() {','function pauseWorkout() {cancelCounterLeadIn();');
  html=html.replace('function resetWorkout() {','function resetWorkout() {cancelCounterLeadIn();');
  // Strength presets allow a complete repetition; explicit user settings stay editable.
